@@ -38,6 +38,19 @@ jobs:
               git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
               cd kali-live
 
+              # Kali's rolling keyring now lives in /usr/share/keyrings, while some
+              # live-build helper code still expects the legacy trusted.gpg.d path.
+              # Patch only exact legacy path references, without disabling signature checks.
+              for search_root in . /usr/share/live-build; do
+                if [ -d "$search_root" ]; then
+                  grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' \
+                    'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' "$search_root" 2>/dev/null || true
+                fi
+              done | sort -u | while IFS= read -r script; do
+                [ -n "$script" ] || continue
+                sed -i 's#chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg#chroot/usr/share/keyrings/kali-archive-keyring.gpg#g' "$script"
+              done
+
               # Add a conservative, useful package set without relying on unsupported
               # build.sh flags or brittle edits to upstream keyring handling.
               mkdir -p config/package-lists

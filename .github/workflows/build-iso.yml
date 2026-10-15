@@ -29,8 +29,7 @@ jobs:
         run: |
           docker run --privileged --rm \
             -v "$GITHUB_WORKSPACE/output:/output" \
-            kalilinux/kali-rolling:latest \
-            bash -lc '
+            kalilinux/kali-rolling:latest bash -s <<'CONTAINER_SCRIPT'
               set -Eeuo pipefail
               export DEBIAN_FRONTEND=noninteractive
               apt-get update
@@ -96,7 +95,7 @@ jobs:
               test -s /output/CodeOS-X-Ultimate-amd64.iso
               ls -lh /output/CodeOS-X-Ultimate-amd64.iso
               sha256sum /output/CodeOS-X-Ultimate-amd64.iso
-            '
+          CONTAINER_SCRIPT
 
       - name: Verify ISO output
         run: |

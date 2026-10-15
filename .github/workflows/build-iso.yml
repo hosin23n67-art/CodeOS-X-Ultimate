@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/build-iso.yml"
       - "security-center/**"
+      - "codeos-ui/**"
       - "README.md"
 
 concurrency:
@@ -45,10 +46,17 @@ jobs:
 
           # Compatibility shim for the legacy path used by older live-build helpers.
           # Keep signature verification enabled; use Kali's official keyring.
-          if [ -s /usr/share/keyrings/kali-archive-keyring.gpg ]; then
-            install -D -m 0644 /usr/share/keyrings/kali-archive-keyring.gpg \
-              config/includes.chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
+          if [ ! -s /usr/share/keyrings/kali-archive-keyring.gpg ]; then
+            echo "ERROR: Kali archive keyring is missing in the build container." >&2
+            exit 1
           fi
+          # This helper reads the keyring during installer preparation, before
+          # the normal includes.chroot files are copied into the final image.
+          # Seed it before package installation as well as in the final image.
+          install -D -m 0644 /usr/share/keyrings/kali-archive-keyring.gpg \
+            config/includes.chroot_before_packages/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
+          install -D -m 0644 /usr/share/keyrings/kali-archive-keyring.gpg \
+            config/includes.chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
 
           # Install CodeOS apps, launchers and artwork into the live image.
           DESTDIR="$PWD/config/includes.chroot" bash /project/codeos-ui/install-codeos-ui.sh

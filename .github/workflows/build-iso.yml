@@ -2,6 +2,9 @@ name: Build CodeOS X Ultimate ISO
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-iso.yml'
 
 permissions:
   contents: read

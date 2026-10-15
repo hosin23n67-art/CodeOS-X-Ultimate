@@ -27,9 +27,9 @@ jobs:
 
       - name: Build CodeOS X Ultimate ISO using Kali's supported live-build workflow
         run: |
-          docker run --privileged --rm \
+          docker run --privileged --rm --entrypoint /bin/bash \
             -v "$GITHUB_WORKSPACE/output:/output" \
-            kalilinux/kali-rolling:latest bash -s <<'CONTAINER_SCRIPT'
+            kalilinux/kali-rolling:latest -s <<'CONTAINER_SCRIPT'
               set -Eeuo pipefail
               export DEBIAN_FRONTEND=noninteractive
               apt-get update

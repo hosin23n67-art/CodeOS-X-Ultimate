@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - ".github/workflows/build-iso.yml"
+      - "security-center/**"
+      - "README.md"
 
 permissions:
   contents: read
@@ -17,43 +19,90 @@ jobs:
       - name: Free runner disk space
         run: |
           df -h
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
           df -h
 
       - name: Prepare output directory
         run: mkdir -p "$GITHUB_WORKSPACE/output"
 
-      - name: Build 64-bit CodeOS X Ultimate inside Kali rolling
+      - name: Build CodeOS X Ultimate ISO using Kali's supported live-build workflow
         run: |
           docker run --privileged --rm \
             -v "$GITHUB_WORKSPACE/output:/output" \
             kalilinux/kali-rolling:latest \
             bash -lc '
-              set -euo pipefail
+              set -Eeuo pipefail
               export DEBIAN_FRONTEND=noninteractive
               apt-get update
-              apt-get install -y --no-install-recommends \
-                git live-build cdebootstrap curl xorriso ca-certificates python3
+              apt-get install -y --no-install-recommends git live-build cdebootstrap curl ca-certificates
               git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
               cd kali-live
 
-              # Normalize the legacy keyring path across upstream shell helpers.
-              # Use shell tools here to avoid nested heredoc quoting/indentation issues.
-              grep -RIl "chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg" . --include="*.sh" --include="*.bash" | xargs -r sed -i "s#chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg#chroot/usr/share/keyrings/kali-archive-keyring.gpg#g"
+              # Add a conservative, useful package set without relying on unsupported
+              # build.sh flags or brittle edits to upstream keyring handling.
+              mkdir -p config/package-lists
+              printf "%s\n" \
+                "kali-desktop-xfce" \
+                "kali-themes" \
+                "kali-menu" \
+                "lightdm" \
+                "thunar" \
+                "xfce4-whiskermenu-plugin" \
+                "papirus-icon-theme" \
+                "network-manager-applet" \
+                "nm-connection-editor" \
+                "firefox-esr" \
+                "python3" \
+                "python3-pip" \
+                "python3-venv" \
+                "python3-dev" \
+                "build-essential" \
+                "gcc" "g++" "clang" "lld" "llvm" \
+                "git" "cmake" "ninja-build" "make" "pkg-config" \
+                "nasm" "binutils" "curl" "wget" "vim" "neovim" \
+                "htop" "tmux" "tree" "unzip" "zip" \
+                "net-tools" "dnsutils" "iproute2" "openssh-client" \
+                "nmap" "wireshark" "sqlmap" "gobuster" "nikto" \
+                "john" "aircrack-ng" "hydra" "tcpdump" \
+                > config/package-lists/codeos.list.chroot
 
-              ./build.sh --arch amd64 --variant default --output /output --packages "kali-desktop-xfce,kali-themes,kali-menu,lightdm,thunar,xfce4-whiskermenu-plugin,papirus-icon-theme,network-manager-applet,nm-connection-editor,firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,kali-tools-top10,nmap,wireshark,metasploit-framework,burpsuite,sqlmap,gobuster,nikto,john,hashcat,aircrack-ng,hydra,bettercap,tcpdump"
+              test -s config/package-lists/codeos.list.chroot
+              echo "Package list prepared:"
+              cat config/package-lists/codeos.list.chroot
+
+              # Official Kali live-build wrapper selects its own output location.
+              ./build.sh --verbose
+
+              iso="$(find images -maxdepth 1 -type f -name "*.iso" -print -quit)"
+              if [ -z "$iso" ]; then
+                echo "ERROR: Kali build finished without producing an ISO in images/." >&2
+                find . -maxdepth 3 -type f | tail -100
+                exit 1
+              fi
+              cp "$iso" /output/CodeOS-X-Ultimate-amd64.iso
+              test -s /output/CodeOS-X-Ultimate-amd64.iso
+              ls -lh /output/CodeOS-X-Ultimate-amd64.iso
+              sha256sum /output/CodeOS-X-Ultimate-amd64.iso
             '
 
       - name: Verify ISO output
         run: |
-          find output -maxdepth 2 -type f -name '*.iso' -printf '%p (%s bytes)\n'
-          test -n "$(find output -maxdepth 2 -type f -name '*.iso' -print -quit)"
+          set -euo pipefail
+          test -s output/CodeOS-X-Ultimate-amd64.iso
+          size="$(stat -c '%s' output/CodeOS-X-Ultimate-amd64.iso)"
+          echo "ISO size: $size bytes"
+          if [ "$size" -lt 1000000000 ]; then
+            echo "ERROR: ISO is unexpectedly small; refusing to publish it." >&2
+            exit 1
+          fi
+          file output/CodeOS-X-Ultimate-amd64.iso
+          sha256sum output/CodeOS-X-Ultimate-amd64.iso
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: CodeOS-X-Ultimate-amd64-ISO
-          path: output/*.iso
+          path: output/CodeOS-X-Ultimate-amd64.iso
           if-no-files-found: error
           compression-level: 0
           retention-days: 7

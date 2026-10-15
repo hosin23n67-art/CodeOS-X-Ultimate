@@ -41,6 +41,29 @@ jobs:
           echo "== Updating Kali container packages =="
           apt-get update
           apt-get install -y --no-install-recommends git live-build cdebootstrap debootstrap curl xorriso ca-certificates
+
+          # Kali live-build's installer helper still expects the archive keyring
+          # in the legacy /etc/apt/trusted.gpg.d location inside the target chroot.
+          # On current Kali, the package places it under /usr/share/keyrings.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("/usr/lib/live/build/installer_debian-installer")
+          s = p.read_text()
+          target = "cp chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg"
+          if target not in s:
+              raise SystemExit("ERROR: expected legacy keyring copy command was not found in installer_debian-installer")
+          block = """if [ ! -s chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ]; then
+              if [ -s chroot/usr/share/keyrings/kali-archive-keyring.gpg ]; then
+                  install -D -m 0644 chroot/usr/share/keyrings/kali-archive-keyring.gpg chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
+              else
+                  echo "ERROR: Kali keyring is missing from both legacy and current locations in chroot" >&2
+                  exit 1
+              fi
+          fi
+          """
+          p.write_text(s.replace(target, block + target, 1))
+          print("Patched installer_debian-installer with a current-keyring fallback.")
+          PY
           git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
           cd kali-live
 

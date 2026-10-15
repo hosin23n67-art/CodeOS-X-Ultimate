@@ -40,7 +40,7 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           echo "== Updating Kali container packages =="
           apt-get update
-          apt-get install -y --no-install-recommends git live-build cdebootstrap debootstrap curl xorriso ca-certificates
+          apt-get install -y --no-install-recommends git live-build cdebootstrap debootstrap curl xorriso ca-certificates python3
 
           # Kali live-build's installer helper still expects the archive keyring
           # in the legacy /etc/apt/trusted.gpg.d location inside the target chroot.
@@ -49,9 +49,13 @@ jobs:
           from pathlib import Path
           p = Path("/usr/lib/live/build/installer_debian-installer")
           s = p.read_text()
-          target = "cp chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg"
-          if target not in s:
-              raise SystemExit("ERROR: expected legacy keyring copy command was not found in installer_debian-installer")
+          import re
+          pattern = re.compile(r"^.*cp .*kali-archive-keyring\\.gpg.*$", re.MULTILINE)
+          match = pattern.search(s)
+          if not match:
+              print("Installer helper keyring references:")
+              print("\\n".join(line for line in s.splitlines() if "keyring" in line.lower()))
+              raise SystemExit("ERROR: no keyring copy command found in installer_debian-installer")
           block = """if [ ! -s chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ]; then
               if [ -s chroot/usr/share/keyrings/kali-archive-keyring.gpg ]; then
                   install -D -m 0644 chroot/usr/share/keyrings/kali-archive-keyring.gpg chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
@@ -61,7 +65,8 @@ jobs:
               fi
           fi
           """
-          p.write_text(s.replace(target, block + target, 1))
+          s = s[:match.start()] + block + s[match.start():]
+          p.write_text(s)
           print("Patched installer_debian-installer with a current-keyring fallback.")
           PY
           git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git

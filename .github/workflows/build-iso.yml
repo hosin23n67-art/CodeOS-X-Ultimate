@@ -70,8 +70,8 @@ jobs:
               echo "Package list prepared:"
               cat config/package-lists/codeos.list.chroot
 
-              # Official Kali live-build wrapper selects its own output location.
-              ./build.sh --verbose
+              # The current upstream wrapper no longer supports --verbose; use its default build mode.
+              ./build.sh
 
               iso="$(find images -maxdepth 1 -type f -name "*.iso" -print -quit)"
               if [ -z "$iso" ]; then

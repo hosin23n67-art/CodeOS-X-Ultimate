@@ -37,43 +37,9 @@ jobs:
               git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
               cd kali-live
 
-              # Search the entire upstream checkout, not just build.sh: Kali moved
-              # keyring handling between helper scripts in different revisions.
-              python3 - <<'PY'
-              from pathlib import Path
-
-              old = "chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg"
-              fallback = """if [ ! -f chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ] && [ -f chroot/usr/share/keyrings/kali-archive-keyring.gpg ]; then
-                mkdir -p chroot/etc/apt/trusted.gpg.d
-                cp chroot/usr/share/keyrings/kali-archive-keyring.gpg chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
-              fi
-              """
-              patched = []
-              for p in Path(".").rglob("*"):
-                  if not p.is_file() or p.suffix not in {".sh", ".bash"}:
-                      continue
-                  try:
-                      original = p.read_text()
-                  except (UnicodeDecodeError, OSError):
-                      continue
-                  lines = original.splitlines(keepends=True)
-                  out = []
-                  changed = False
-                  for line in lines:
-                      if old in line and "cp" in line and not changed:
-                          out.append(fallback)
-                          changed = True
-                      out.append(line)
-                  if changed:
-                      p.write_text("".join(out))
-                      patched.append(str(p))
-              if not patched:
-                  # Do not fail just because the current upstream revision no longer
-                  # has the obsolete path; the build may already have fixed it.
-                  print("No obsolete keyring-copy command found; using upstream scripts unchanged.")
-              else:
-                  print("Patched obsolete keyring-copy command in:", ", ".join(patched))
-              PY
+              # Normalize the legacy keyring path across upstream shell helpers.
+              # Use shell tools here to avoid nested heredoc quoting/indentation issues.
+              grep -RIl "chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg" . --include="*.sh" --include="*.bash" | xargs -r sed -i "s#chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg#chroot/usr/share/keyrings/kali-archive-keyring.gpg#g"
 
               ./build.sh --arch amd64 --variant default --output /output --packages "kali-desktop-xfce,kali-themes,kali-menu,lightdm,thunar,xfce4-whiskermenu-plugin,papirus-icon-theme,network-manager-applet,nm-connection-editor,firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,kali-tools-top10,nmap,wireshark,metasploit-framework,burpsuite,sqlmap,gobuster,nikto,john,hashcat,aircrack-ng,hydra,bettercap,tcpdump"
             '

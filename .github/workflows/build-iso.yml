@@ -27,76 +27,101 @@ jobs:
 
       - name: Build CodeOS X Ultimate ISO using Kali's supported live-build workflow
         run: |
-          docker run --privileged --rm --entrypoint /bin/bash \
-            -v "$GITHUB_WORKSPACE/output:/output" \
-            kalilinux/kali-rolling:latest -s <<'CONTAINER_SCRIPT'
-              set -Eeuo pipefail
-              export DEBIAN_FRONTEND=noninteractive
-              apt-get update
-              apt-get install -y --no-install-recommends git live-build cdebootstrap debootstrap curl xorriso ca-certificates
-              git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
-              cd kali-live
+          cat > "$RUNNER_TEMP/build-inside.sh" <<'CONTAINER_SCRIPT'
+          set -Eeuo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          echo "== Updating Kali container packages =="
+          apt-get update
+          apt-get install -y --no-install-recommends git live-build cdebootstrap debootstrap curl xorriso ca-certificates
+          git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
+          cd kali-live
 
-              # Kali's rolling keyring now lives in /usr/share/keyrings, while some
-              # live-build helper code still expects the legacy trusted.gpg.d path.
-              # Patch only exact legacy path references, without disabling signature checks.
-              for search_root in . /usr/share/live-build; do
-                if [ -d "$search_root" ]; then
-                  grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' \
-                    'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' "$search_root" 2>/dev/null || true
-                fi
-              done | sort -u | while IFS= read -r script; do
-                [ -n "$script" ] || continue
-                sed -i 's#chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg#chroot/usr/share/keyrings/kali-archive-keyring.gpg#g' "$script"
-              done
+          # Keep package signature verification enabled; correct the obsolete keyring path if present.
+          for search_root in . /usr/share/live-build; do
+            if [ -d "$search_root" ]; then
+              grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' 'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' "$search_root" 2>/dev/null || true
+            fi
+          done | sort -u | while IFS= read -r script; do
+            [ -n "$script" ] || continue
+            sed -i 's#chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg#chroot/usr/share/keyrings/kali-archive-keyring.gpg#g' "$script"
+          done
 
-              # Add a conservative, useful package set without relying on unsupported
-              # build.sh flags or brittle edits to upstream keyring handling.
-              mkdir -p config/package-lists
-              printf "%s\n" \
-                "kali-desktop-xfce" \
-                "kali-themes" \
-                "kali-menu" \
-                "lightdm" \
-                "thunar" \
-                "xfce4-whiskermenu-plugin" \
-                "papirus-icon-theme" \
-                "network-manager-applet" \
-                "nm-connection-editor" \
-                "firefox-esr" \
-                "python3" \
-                "python3-pip" \
-                "python3-venv" \
-                "python3-dev" \
-                "build-essential" \
-                "gcc" "g++" "clang" "lld" "llvm" \
-                "git" "cmake" "ninja-build" "make" "pkg-config" \
-                "nasm" "binutils" "curl" "wget" "vim" "neovim" \
-                "htop" "tmux" "tree" "unzip" "zip" \
-                "net-tools" "dnsutils" "iproute2" "openssh-client" \
-                "nmap" "wireshark" "sqlmap" "gobuster" "nikto" \
-                "john" "aircrack-ng" "hydra" "tcpdump" \
-                > config/package-lists/codeos.list.chroot
+          mkdir -p config/package-lists
+          cat > config/package-lists/codeos.list.chroot <<'PACKAGES'
+          kali-desktop-xfce
+          kali-themes
+          kali-menu
+          lightdm
+          thunar
+          xfce4-whiskermenu-plugin
+          papirus-icon-theme
+          network-manager-applet
+          nm-connection-editor
+          firefox-esr
+          python3
+          python3-pip
+          python3-venv
+          python3-dev
+          build-essential
+          gcc
+          g++
+          clang
+          lld
+          llvm
+          git
+          cmake
+          ninja-build
+          make
+          pkg-config
+          nasm
+          binutils
+          curl
+          wget
+          vim
+          neovim
+          htop
+          tmux
+          tree
+          unzip
+          zip
+          net-tools
+          dnsutils
+          iproute2
+          openssh-client
+          nmap
+          wireshark
+          sqlmap
+          gobuster
+          nikto
+          john
+          aircrack-ng
+          hydra
+          tcpdump
+          PACKAGES
+          test -s config/package-lists/codeos.list.chroot
+          echo "== Package list prepared: $(wc -l < config/package-lists/codeos.list.chroot) packages =="
+          ./build.sh
 
-              test -s config/package-lists/codeos.list.chroot
-              echo "Package list prepared:"
-              cat config/package-lists/codeos.list.chroot
-
-              # The current upstream wrapper no longer supports --verbose; use its default build mode.
-              ./build.sh
-
-              iso="$(find images -maxdepth 1 -type f -name "*.iso" -print -quit)"
-              if [ -z "$iso" ]; then
-                echo "ERROR: Kali build finished without producing an ISO in images/." >&2
-                find . -maxdepth 3 -type f | tail -100
-                exit 1
-              fi
-              cp "$iso" /output/CodeOS-X-Ultimate-amd64.iso
-              test -s /output/CodeOS-X-Ultimate-amd64.iso
-              ls -lh /output/CodeOS-X-Ultimate-amd64.iso
-              sha256sum /output/CodeOS-X-Ultimate-amd64.iso
+          iso="$(find images -maxdepth 1 -type f -name '*.iso' -print -quit)"
+          if [ -z "$iso" ]; then
+            echo "ERROR: build.sh finished without producing an ISO in images/." >&2
+            find . -maxdepth 3 -type f | tail -100
+            exit 1
+          fi
+          cp "$iso" /output/CodeOS-X-Ultimate-amd64.iso
+          test -s /output/CodeOS-X-Ultimate-amd64.iso
+          ls -lh /output/CodeOS-X-Ultimate-amd64.iso
+          sha256sum /output/CodeOS-X-Ultimate-amd64.iso
           CONTAINER_SCRIPT
 
+          echo "== Checking build script syntax =="
+          bash -n "$RUNNER_TEMP/build-inside.sh"
+          echo "== Running build inside Kali container =="
+          docker run --privileged --rm --entrypoint /bin/bash \
+            -v "$GITHUB_WORKSPACE/output:/output" \
+            -v "$RUNNER_TEMP/build-inside.sh:/tmp/build-inside.sh:ro" \
+            kalilinux/kali-rolling:latest /tmp/build-inside.sh
+          
       - name: Verify ISO output
         run: |
           set -euo pipefail

@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     steps:
-      - name: Free disk space
+      - name: Free runner disk space
         run: |
           df -h
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
@@ -22,25 +22,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git live-build curl xorriso
 
-      - name: Get Kali's official live-build configuration
-        run: |
-          git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
+      - name: Get Kali's official live-build scripts
+        run: git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
 
-      - name: Build CodeOS X Ultimate (amd64)
+      - name: Build 64-bit CodeOS X Ultimate
         run: |
           cd kali-live
-          sudo ./build.sh --verbose --arch amd64 --variant default --output "$GITHUB_WORKSPACE/output" --packages "firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,nmap,wireshark"
+          ./build.sh --verbose --arch amd64 --variant default --packages "firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,nmap,wireshark"
 
-      - name: Check ISO output
+      - name: Verify ISO output
         run: |
-          find output -maxdepth 2 -type f -name '*.iso' -printf '%p (%s bytes)\n'
-          test -n "$(find output -maxdepth 2 -type f -name '*.iso' -print -quit)"
+          find kali-live/images -maxdepth 2 -type f -name '*.iso' -printf '%p (%s bytes)\n'
+          test -n "$(find kali-live/images -maxdepth 2 -type f -name '*.iso' -print -quit)"
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: CodeOS-X-Ultimate-amd64-ISO
-          path: output/*.iso
+          path: kali-live/images/*.iso
           if-no-files-found: error
           compression-level: 0
           retention-days: 7

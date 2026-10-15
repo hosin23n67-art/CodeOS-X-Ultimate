@@ -34,7 +34,7 @@ jobs:
               set -Eeuo pipefail
               export DEBIAN_FRONTEND=noninteractive
               apt-get update
-              apt-get install -y --no-install-recommends git live-build cdebootstrap curl ca-certificates
+              apt-get install -y --no-install-recommends git live-build cdebootstrap debootstrap curl xorriso ca-certificates
               git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
               cd kali-live
 

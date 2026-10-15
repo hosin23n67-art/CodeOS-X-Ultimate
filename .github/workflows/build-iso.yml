@@ -55,9 +55,9 @@ jobs:
           out = []
           inserted = False
           for line in lines:
-                  if not inserted and "cp " in line and old in line:
-                      out.append(fallback)
-                      inserted = True
+              if not inserted and "cp " in line and old in line:
+                  out.append(fallback)
+                  inserted = True
               out.append(line)
           if not inserted:
               raise SystemExit("Could not locate the outdated Kali keyring copy command in build.sh")

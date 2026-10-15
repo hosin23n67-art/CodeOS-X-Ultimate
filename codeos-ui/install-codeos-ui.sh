@@ -2,6 +2,9 @@
 set -euo pipefail
 install -d /usr/share/codeos /usr/local/bin /usr/share/applications /etc/skel/.config/codeos
 install -m 0644 /project/codeos-ui/codeos-wallpaper.svg /usr/share/codeos/codeos-wallpaper.svg
+install -d /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
+install -m 0644 /project/codeos-ui/xfce4-panel.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+install -m 0644 /project/codeos-ui/xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
 install -m 0755 /project/codeos-ui/codeos-settings.py /usr/local/bin/codeos-settings
 install -m 0755 /project/codeos-ui/codeos-store.py /usr/local/bin/codeos-store
 install -m 0644 /project/security-center/index.html /usr/share/codeos/security-center.html

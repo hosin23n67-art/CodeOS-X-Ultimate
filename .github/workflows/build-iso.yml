@@ -8,6 +8,10 @@ on:
       - "security-center/**"
       - "README.md"
 
+concurrency:
+  group: codeos-iso-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

@@ -20,18 +20,26 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
           df -h
 
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git live-build curl xorriso
+      - name: Prepare output directory
+        run: mkdir -p "$GITHUB_WORKSPACE/output"
 
-      - name: Get Kali's official live-build scripts
-        run: git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
-
-      - name: Build 64-bit CodeOS X Ultimate
+      # Ubuntu 24.04 ships an older live-build than the current Kali build scripts require.
+      # Build inside Kali rolling so live-build and the build scripts come from compatible releases.
+      - name: Build 64-bit CodeOS X Ultimate inside Kali rolling
         run: |
-          cd kali-live
-          ./build.sh --arch amd64 --variant default --output "$GITHUB_WORKSPACE/output" --packages "kali-desktop-xfce,kali-themes,kali-menu,lightdm,thunar,xfce4-whiskermenu-plugin,papirus-icon-theme,network-manager-gnome,firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,kali-tools-top10,nmap,wireshark,metasploit-framework,burpsuite,sqlmap,gobuster,nikto,john,hashcat,aircrack-ng,hydra,bettercap,tcpdump"
+          docker run --privileged --rm \
+            -v "$GITHUB_WORKSPACE/output:/output" \
+            kalilinux/kali-rolling:latest \
+            bash -lc '
+              set -euo pipefail
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                git live-build cdebootstrap curl xorriso ca-certificates
+              git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
+              cd kali-live
+              ./build.sh --arch amd64 --variant default --output /output --packages "kali-desktop-xfce,kali-themes,kali-menu,lightdm,thunar,xfce4-whiskermenu-plugin,papirus-icon-theme,network-manager-gnome,firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,kali-tools-top10,nmap,wireshark,metasploit-framework,burpsuite,sqlmap,gobuster,nikto,john,hashcat,aircrack-ng,hydra,bettercap,tcpdump"
+            '
 
       - name: Verify ISO output
         run: |

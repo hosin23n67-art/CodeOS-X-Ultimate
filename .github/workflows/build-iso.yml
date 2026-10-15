@@ -31,7 +31,7 @@ jobs:
       - name: Build 64-bit CodeOS X Ultimate
         run: |
           cd kali-live
-          ./build.sh --arch amd64 --variant default --output "$GITHUB_WORKSPACE/output" --packages "firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,nmap,wireshark"
+          ./build.sh --arch amd64 --variant default --output "$GITHUB_WORKSPACE/output" --packages "kali-desktop-xfce,kali-themes,kali-menu,lightdm,thunar,xfce4-whiskermenu-plugin,papirus-icon-theme,network-manager-gnome,firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,kali-tools-top10,nmap,wireshark,metasploit-framework,burpsuite,sqlmap,gobuster,nikto,john,hashcat,aircrack-ng,hydra,bettercap,tcpdump"
 
       - name: Verify ISO output
         run: |

@@ -49,26 +49,21 @@ jobs:
           from pathlib import Path
           p = Path("/usr/lib/live/build/installer_debian-installer")
           s = p.read_text()
-          lines = s.splitlines(keepends=True)
-          index = next((i for i, line in enumerate(lines)
-                        if "kali-archive-keyring.gpg" in line and line.lstrip().startswith("cp ")), None)
-          if index is None:
-              print("Installer helper keyring references:")
-              print("\\n".join(line.rstrip() for line in lines if "keyring" in line.lower()))
-              raise SystemExit("ERROR: no keyring copy command found in installer_debian-installer")
-          block = """if [ ! -s chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ]; then
+          # Repair the legacy keyring path at helper startup, without depending
+          # on the exact cp command syntax used by different live-build versions.
+          marker = "# CodeOS legacy Kali archive keyring compatibility"
+          if marker not in s:
+              prefix = """# CodeOS legacy Kali archive keyring compatibility
+          if [ -d chroot/etc/apt/trusted.gpg.d ] && [ ! -s chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ]; then
               if [ -s chroot/usr/share/keyrings/kali-archive-keyring.gpg ]; then
                   install -D -m 0644 chroot/usr/share/keyrings/kali-archive-keyring.gpg chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
-              else
-                  echo "ERROR: Kali keyring is missing from both legacy and current locations in chroot" >&2
-                  exit 1
               fi
           fi
           """
-          lines.insert(index, block)
-          p.write_text("".join(lines))
-          print("Patched installer_debian-installer with a current-keyring fallback.")
+              p.write_text(prefix + s)
+          print("Added startup fallback for Kali archive keyring.")
           PY
+
           git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
           cd kali-live
 

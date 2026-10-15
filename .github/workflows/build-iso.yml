@@ -49,12 +49,12 @@ jobs:
           from pathlib import Path
           p = Path("/usr/lib/live/build/installer_debian-installer")
           s = p.read_text()
-          import re
-          pattern = re.compile(r"^.*cp .*kali-archive-keyring\\.gpg.*$", re.MULTILINE)
-          match = pattern.search(s)
-          if not match:
+          lines = s.splitlines(keepends=True)
+          index = next((i for i, line in enumerate(lines)
+                        if "kali-archive-keyring.gpg" in line and line.lstrip().startswith("cp ")), None)
+          if index is None:
               print("Installer helper keyring references:")
-              print("\\n".join(line for line in s.splitlines() if "keyring" in line.lower()))
+              print("\\n".join(line.rstrip() for line in lines if "keyring" in line.lower()))
               raise SystemExit("ERROR: no keyring copy command found in installer_debian-installer")
           block = """if [ ! -s chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ]; then
               if [ -s chroot/usr/share/keyrings/kali-archive-keyring.gpg ]; then
@@ -65,8 +65,8 @@ jobs:
               fi
           fi
           """
-          s = s[:match.start()] + block + s[match.start():]
-          p.write_text(s)
+          lines.insert(index, block)
+          p.write_text("".join(lines))
           print("Patched installer_debian-installer with a current-keyring fallback.")
           PY
           git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git

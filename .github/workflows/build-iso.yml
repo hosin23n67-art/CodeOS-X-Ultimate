@@ -43,30 +43,6 @@ jobs:
           git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
           cd kali-live
 
-          # Kali's current keyring lives under /usr/share/keyrings. Patch the
-          # live-build helper that still expects the obsolete trusted.gpg.d path.
-          echo "== Locating obsolete live-build keyring reference =="
-          grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' \
-            'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' \
-            . /usr/share/live /usr/share/live-build /usr/lib/live /usr/lib/live-build /usr/bin/lb /usr/bin/live-build 2>/dev/null \
-            | sort -u > /tmp/obsolete-keyring-files.txt || true
-          cat /tmp/obsolete-keyring-files.txt
-          if [ ! -s /tmp/obsolete-keyring-files.txt ]; then
-            echo "ERROR: Could not locate the live-build helper containing the obsolete keyring path." >&2
-            exit 1
-          fi
-          while IFS= read -r script; do
-            [ -n "$script" ] || continue
-            sed -i 's#chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg#chroot/usr/share/keyrings/kali-archive-keyring.gpg#g' "$script"
-          done < /tmp/obsolete-keyring-files.txt
-          echo "== Confirming obsolete keyring path is gone from live-build helpers =="
-          if grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' \
-            'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' \
-            /usr/share/live /usr/share/live-build /usr/lib/live /usr/lib/live-build /usr/bin/lb /usr/bin/live-build 2>/dev/null; then
-            echo "ERROR: obsolete keyring path remains after patching." >&2
-            exit 1
-          fi
-
           # Compatibility shim for the legacy path used by older live-build helpers.
           # Keep signature verification enabled; use Kali's official keyring.
           if [ -s /usr/share/keyrings/kali-archive-keyring.gpg ]; then
@@ -75,7 +51,7 @@ jobs:
           fi
 
           # Install CodeOS apps, launchers and artwork into the live image.
-          bash /project/codeos-ui/install-codeos-ui.sh
+          DESTDIR="$PWD/config/includes.chroot" bash /project/codeos-ui/install-codeos-ui.sh
 
           mkdir -p config/package-lists
           cat > config/package-lists/codeos.list.chroot <<'PACKAGES'

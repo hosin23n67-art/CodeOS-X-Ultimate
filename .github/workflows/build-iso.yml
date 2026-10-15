@@ -92,9 +92,10 @@ jobs:
           papirus-icon-theme
           python3-tk
           policykit-1
+          policykit-1-gnome
           pkexec
           calamares
-          calamares-settings-debian
+          calamares-settings-kali
           gparted
           nm-connection-editor
           firefox-esr

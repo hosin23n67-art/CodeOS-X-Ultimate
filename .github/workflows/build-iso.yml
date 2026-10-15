@@ -42,27 +42,27 @@ jobs:
               # Some build-script revisions still expect it under /etc/apt/trusted.gpg.d.
               # Add a guarded fallback immediately before the script line that uses the old path.
               python3 - <<'PY'
-              from pathlib import Path
-              p = Path("build.sh")
-              text = p.read_text()
-              old = "chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg"
-              fallback = """if [ ! -f chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ] && [ -f chroot/usr/share/keyrings/kali-archive-keyring.gpg ]; then
-                mkdir -p chroot/etc/apt/trusted.gpg.d
-                cp chroot/usr/share/keyrings/kali-archive-keyring.gpg chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
-              fi
-              """
-              lines = text.splitlines(keepends=True)
-              out = []
-              inserted = False
-              for line in lines:
-                  if not inserted and "cp " in line and old in line:
-                      out.append(fallback)
-                      inserted = True
-                  out.append(line)
-              if not inserted:
-                  raise SystemExit("Could not locate the outdated Kali keyring copy command in build.sh")
-              p.write_text("".join(out))
-              print("Patched old Kali archive-keyring path:", inserted)
+    from pathlib import Path
+    p = Path("build.sh")
+    text = p.read_text()
+    old = "chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg"
+    fallback = """if [ ! -f chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg ] && [ -f chroot/usr/share/keyrings/kali-archive-keyring.gpg ]; then
+      mkdir -p chroot/etc/apt/trusted.gpg.d
+      cp chroot/usr/share/keyrings/kali-archive-keyring.gpg chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg
+    fi
+    """
+    lines = text.splitlines(keepends=True)
+    out = []
+    inserted = False
+    for line in lines:
+        if not inserted and "cp " in line and old in line:
+            out.append(fallback)
+            inserted = True
+        out.append(line)
+    if not inserted:
+        raise SystemExit("Could not locate the outdated Kali keyring copy command in build.sh")
+    p.write_text("".join(out))
+    print("Patched old Kali archive-keyring path:", inserted)
               PY
 
               ./build.sh --arch amd64 --variant default --output /output --packages "kali-desktop-xfce,kali-themes,kali-menu,lightdm,thunar,xfce4-whiskermenu-plugin,papirus-icon-theme,network-manager-applet,nm-connection-editor,firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,kali-tools-top10,nmap,wireshark,metasploit-framework,burpsuite,sqlmap,gobuster,nikto,john,hashcat,aircrack-ng,hydra,bettercap,tcpdump"

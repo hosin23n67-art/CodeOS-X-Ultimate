@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/build-iso.yml'
+      - ".github/workflows/build-iso.yml"
 
 permissions:
   contents: read
@@ -31,18 +31,18 @@ jobs:
       - name: Build 64-bit CodeOS X Ultimate
         run: |
           cd kali-live
-          ./build.sh --verbose --arch amd64 --variant default --packages "firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,nmap,wireshark"
+          ./build.sh --arch amd64 --variant default --output "$GITHUB_WORKSPACE/output" --packages "firefox-esr,python3,python3-pip,python3-venv,python3-dev,build-essential,gcc,g++,clang,lld,llvm,git,cmake,ninja-build,make,pkg-config,nasm,binutils,curl,wget,vim,neovim,htop,tmux,tree,unzip,zip,net-tools,dnsutils,iproute2,openssh-client,nmap,wireshark"
 
       - name: Verify ISO output
         run: |
-          find kali-live/images -maxdepth 2 -type f -name '*.iso' -printf '%p (%s bytes)\n'
-          test -n "$(find kali-live/images -maxdepth 2 -type f -name '*.iso' -print -quit)"
+          find output -maxdepth 2 -type f -name '*.iso' -printf '%p (%s bytes)\n'
+          test -n "$(find output -maxdepth 2 -type f -name '*.iso' -print -quit)"
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: CodeOS-X-Ultimate-amd64-ISO
-          path: kali-live/images/*.iso
+          path: output/*.iso
           if-no-files-found: error
           compression-level: 0
           retention-days: 7

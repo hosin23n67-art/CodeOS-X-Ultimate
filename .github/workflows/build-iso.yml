@@ -36,15 +36,29 @@ jobs:
           git clone --depth 1 https://gitlab.com/kalilinux/build-scripts/kali-live.git
           cd kali-live
 
-          # Keep package signature verification enabled; correct the obsolete keyring path if present.
-          for search_root in . /usr/share/live-build; do
-            if [ -d "$search_root" ]; then
-              grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' 'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' "$search_root" 2>/dev/null || true
-            fi
-          done | sort -u | while IFS= read -r script; do
+          # Kali's current keyring lives under /usr/share/keyrings. Patch the
+          # live-build helper that still expects the obsolete trusted.gpg.d path.
+          echo "== Locating obsolete live-build keyring reference =="
+          grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' \
+            'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' \
+            . /usr/share/live /usr/lib/live /usr/bin/lb /usr/bin/live-build 2>/dev/null \
+            | sort -u > /tmp/obsolete-keyring-files.txt || true
+          cat /tmp/obsolete-keyring-files.txt
+          if [ ! -s /tmp/obsolete-keyring-files.txt ]; then
+            echo "ERROR: Could not locate the live-build helper containing the obsolete keyring path." >&2
+            exit 1
+          fi
+          while IFS= read -r script; do
             [ -n "$script" ] || continue
             sed -i 's#chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg#chroot/usr/share/keyrings/kali-archive-keyring.gpg#g' "$script"
-          done
+          done < /tmp/obsolete-keyring-files.txt
+          echo "== Confirming obsolete keyring path is gone from live-build helpers =="
+          if grep -RIl --exclude-dir=.git --exclude='*.po' --exclude='*.mo' \
+            'chroot/etc/apt/trusted.gpg.d/kali-archive-keyring.gpg' \
+            /usr/share/live /usr/lib/live /usr/bin/lb /usr/bin/live-build 2>/dev/null; then
+            echo "ERROR: obsolete keyring path remains after patching." >&2
+            exit 1
+          fi
 
           mkdir -p config/package-lists
           cat > config/package-lists/codeos.list.chroot <<'PACKAGES'

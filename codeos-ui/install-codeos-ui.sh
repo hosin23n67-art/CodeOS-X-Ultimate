@@ -45,3 +45,15 @@ cat > /etc/skel/.config/codeos/README.txt <<'EOF'
 CodeOS X user settings are stored in ~/.config/codeos.
 The desktop wallpaper is installed at /usr/share/codeos/codeos-wallpaper.svg.
 EOF
+cat > /usr/share/applications/codeos-installer.desktop <<'EOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Install CodeOS X
+Name[fa]=نصب CodeOS X
+Comment=Install this live system to the computer
+Exec=pkexec calamares
+Icon=drive-harddisk
+Terminal=false
+Categories=System;
+EOF

@@ -26,7 +26,7 @@ def main():
     ttk.Button(frame,text="اعمال تم",command=apply_theme).pack(anchor="w",pady=(0,18))
     ttk.Label(frame,text="رنگ رابط CodeOS").pack(anchor="w")
     accent=tk.StringVar(value="آبی CodeOS"); ttk.Combobox(frame,textvariable=accent,values=list(ACCENTS),state="readonly").pack(fill="x",pady=(5,8))
-    ttk.Label(frame,text="رنگ انتخابی برای اجزای برنامه‌های CodeOS ذخیره می‌شود.").pack(anchor="w")
+    ttk.Label(frame,text="رنگ انتخابی در تنظیمات کاربر ذخیره می‌شود؛ هنوز روی همه اجزای دسکتاپ اعمال نمی‌شود.").pack(anchor="w")
     def save_accent():
         path=os.path.expanduser("~/.config/codeos"); os.makedirs(path,exist_ok=True)
         with open(os.path.join(path,"accent"),"w",encoding="utf-8") as f: f.write(ACCENTS[accent.get()])

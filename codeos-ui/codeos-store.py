@@ -7,11 +7,26 @@ def installed(pkg):
     p=subprocess.run(["dpkg-query","-W","-f=${Status}",pkg],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True)
     return "install ok installed" in p.stdout
 def install(pkg):
-    if not messagebox.askyesno("تأیید نصب",f"نصب «{pkg}» با دسترسی مدیر انجام شود؟\nبسته از مخازن تنظیم‌شده سیستم دریافت می‌شود."): return
+    if not messagebox.askyesno("تأیید نصب", f"نصب «{pkg}» با دسترسی مدیر انجام شود؟\\nبسته از مخازن تنظیم‌شده سیستم دریافت می‌شود."):
+        return
+    # Package names come only from the fixed APPS allowlist above.
+    # Run the transaction in a visible terminal so APT errors are not hidden.
+    command = (
+        "pkexec apt-get install -y " + pkg +
+        "; rc=$?; echo; "
+        'if [ "$rc" -eq 0 ]; then echo "نصب با موفقیت پایان یافت."; '
+        'else echo "نصب ناموفق بود؛ پیام خطا را بررسی کن."; fi; '
+        'echo; read -r -p "برای بستن این پنجره Enter را بزن..." _'
+    )
     try:
-        subprocess.Popen(["pkexec","apt-get","install","-y",pkg])
-        messagebox.showinfo("نصب برنامه","فرایند نصب باز شد. برای دیدن جزئیات، پنجره احراز هویت سیستم را بررسی کن.")
-    except OSError as e: messagebox.showerror("خطا",f"اجرای pkexec ممکن نیست: {e}")
+        subprocess.Popen(["x-terminal-emulator", "-e", "sh", "-lc", command])
+    except OSError as e:
+        messagebox.showerror(
+            "خطا",
+            f"اجرای ترمینال نصب ممکن نیست: {e}\\n"
+            "می‌توانی بسته را از ترمینال با دستور apt install نصب کنی."
+        )
+
 def main():
     root=tk.Tk(); root.title("فروشگاه برنامه‌های CodeOS"); root.geometry("680x580"); root.minsize(520,420); root.configure(bg="#101827")
     style=ttk.Style(); style.theme_use("clam"); style.configure("TFrame",background="#101827"); style.configure("TLabel",background="#101827",foreground="#edf3ff"); style.configure("Title.TLabel",font=("TkDefaultFont",20,"bold"),foreground="#8db2ff")

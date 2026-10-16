@@ -10,6 +10,20 @@ install -m 0755 /project/codeos-ui/codeos-store.py "$DESTDIR/usr/local/bin/codeo
 install -m 0755 /project/codeos-ui/codeos-control-center.py "$DESTDIR/usr/local/bin/codeos-control-center"
 install -m 0755 /project/codeos-ui/codeos-keyboard-setup.sh "$DESTDIR/usr/local/bin/codeos-keyboard-setup"
 install -m 0644 /project/security-center/index.html "$DESTDIR/usr/share/codeos/security-center.html"
+cat > "$DESTDIR/usr/local/bin/codeos-security" <<'EOF'
+#!/bin/sh
+set -eu
+PAGE="file:///usr/share/codeos/security-center.html"
+if command -v firefox-esr >/dev/null 2>&1; then
+    exec firefox-esr --new-window "$PAGE"
+elif command -v xdg-open >/dev/null 2>&1; then
+    exec xdg-open "$PAGE"
+else
+    printf '%s\n' "CodeOS Security Center: Firefox ESR or xdg-open is required." >&2
+    exit 127
+fi
+EOF
+chmod 0755 "$DESTDIR/usr/local/bin/codeos-security"
 cat > "$DESTDIR/usr/share/applications/codeos-settings.desktop" <<'EOF'
 [Desktop Entry]
 Version=1.0
@@ -41,7 +55,7 @@ Type=Application
 Name=CodeOS Security Center
 Name[fa]=مرکز امنیت CodeOS
 Comment=Security tools dashboard preview
-Exec=firefox-esr --new-window file:///usr/share/codeos/security-center.html
+Exec=codeos-security
 Icon=security-high
 Terminal=false
 Categories=System;Security;

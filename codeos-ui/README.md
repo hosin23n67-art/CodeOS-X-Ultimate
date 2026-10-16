@@ -12,4 +12,4 @@ Security Center simulated scan results remain explicitly labeled as demo data. S
 - **CodeOS Control Center**: one window for appearance, software, files, network, display, audio, power, processes and security.
 - **Persian/English keyboard**: US + Persian XKB layouts, Alt+Shift switching, and an XFCE panel layout indicator (FA/EN).
 - Additional desktop utilities: power manager, notifications, Bluetooth, audio control and archive integration.
-- The ISO workflow now collects the ISO from Kali live-build's actual output path instead of the nonexistent `images/` directory.
+- The ISO workflow collects the ISO from Kali live-build's actual output path, checks the El Torito boot catalog, and runs Python, shell, XML, and SVG source validation before the expensive build. These checks do not replace real boot testing.

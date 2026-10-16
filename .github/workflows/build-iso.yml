@@ -30,6 +30,9 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/powershell /usr/local/share/chromium
           df -h
 
+      - name: Validate project source before expensive ISO build
+        run: python3 scripts/validate-source.py
+
       - name: Prepare output directory
         run: mkdir -p "$GITHUB_WORKSPACE/output"
 
@@ -97,7 +100,11 @@ jobs:
           xfce4-settings
           xfce4-panel
           xfce4-xkb-plugin
+          x11-xkb-utils
           xkb-data
+          fonts-noto-naskh-arabic
+          adwaita-gtk-theme
+          dbus-x11
           fonts-noto-core
           fonts-noto-ui-core
           fonts-noto-extra
@@ -172,6 +179,8 @@ jobs:
             find . -maxdepth 4 -type f -name '*.iso' -print
             exit 1
           fi
+          echo "== Checking ISO image structure and boot catalog =="
+          xorriso -indev "$iso" -report_el_torito plain
           cp "$iso" /output/CodeOS-X-Ultimate-amd64.iso
           test -s /output/CodeOS-X-Ultimate-amd64.iso
           ls -lh /output/CodeOS-X-Ultimate-amd64.iso

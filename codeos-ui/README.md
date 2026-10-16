@@ -8,3 +8,8 @@ This directory adds the first native desktop integration layer for the CodeOS X 
 - **Default wallpaper**: CodeOS X SVG artwork.
 
 Security Center simulated scan results remain explicitly labeled as demo data. Software installation depends on network access, working APT repositories, and a PolicyKit authentication agent. This is not a replacement for a full installer or a verified ISO.
+
+- **CodeOS Control Center**: one window for appearance, software, files, network, display, audio, power, processes and security.
+- **Persian/English keyboard**: US + Persian XKB layouts, Alt+Shift switching, and an XFCE panel layout indicator (FA/EN).
+- Additional desktop utilities: power manager, notifications, Bluetooth, audio control and archive integration.
+- The ISO workflow now collects the ISO from Kali live-build's actual output path instead of the nonexistent `images/` directory.

@@ -110,3 +110,17 @@ Exec=codeos-keyboard-setup
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
+
+cat > "$DESTDIR/usr/share/applications/codeos-repair.desktop" <<'EOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CodeOS Repair
+Name[fa]=تعمیر CodeOS
+Comment=Diagnose and repair package problems
+Comment[fa]=بررسی و تعمیر مشکلات بسته‌های سیستم
+Exec=codeos-repair
+Icon=applications-system
+Terminal=false
+Categories=System;Settings;
+EOF

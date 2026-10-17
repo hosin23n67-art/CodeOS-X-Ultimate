@@ -11,6 +11,9 @@ required = [
     "codeos-ui/install-codeos-ui.sh",
     "codeos-ui/codeos-keyboard-setup.sh",
     "codeos-ui/codeos-control-center.py",
+    "codeos-ui/codeos-security-center.py",
+    "codeos-ui/wallpaper-purple.svg",
+    "codeos-ui/wallpaper-teal.svg",
     "codeos-ui/codeos-settings.py",
     "codeos-ui/codeos-store.py",
     "codeos-ui/xfce4-panel.xml",
@@ -24,7 +27,7 @@ for name in required:
     if not path.is_file() or path.stat().st_size == 0:
         errors.append(f"missing or empty required file: {name}")
 
-for name in ("codeos-ui/codeos-control-center.py", "codeos-ui/codeos-settings.py", "codeos-ui/codeos-store.py"):
+for name in ("codeos-ui/codeos-control-center.py", "codeos-ui/codeos-settings.py", "codeos-ui/codeos-store.py", "codeos-ui/codeos-security-center.py"):
     path = ROOT / name
     if path.exists():
         try:
@@ -42,7 +45,7 @@ for name in ("codeos-ui/install-codeos-ui.sh", "codeos-ui/codeos-keyboard-setup.
         else:
             print(f"Shell syntax OK: {name}")
 
-for name in ("codeos-ui/xfce4-panel.xml", "codeos-ui/xfce4-desktop.xml", "codeos-ui/codeos-wallpaper.svg"):
+for name in ("codeos-ui/xfce4-panel.xml", "codeos-ui/xfce4-desktop.xml", "codeos-ui/codeos-wallpaper.svg", "codeos-ui/wallpaper-purple.svg", "codeos-ui/wallpaper-teal.svg"):
     path = ROOT / name
     if path.exists():
         try:

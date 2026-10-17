@@ -161,6 +161,10 @@ jobs:
           openssh-client
           nmap
           wireshark
+          ufw
+          clamav
+          clamav-daemon
+          flatpak
           sqlmap
           gobuster
           nikto

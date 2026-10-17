@@ -11,6 +11,8 @@ install -m 0755 /project/codeos-ui/codeos-settings.py "$DESTDIR/usr/local/bin/co
 install -m 0755 /project/codeos-ui/codeos-store.py "$DESTDIR/usr/local/bin/codeos-store"
 install -m 0755 /project/codeos-ui/codeos-control-center.py "$DESTDIR/usr/local/bin/codeos-control-center"
 install -m 0755 /project/codeos-ui/codeos-security-center.py "$DESTDIR/usr/local/bin/codeos-security-center"
+install -m 0755 /project/codeos-ui/codeos-update.py "$DESTDIR/usr/local/bin/codeos-update"
+install -m 0644 /project/codeos-ui/version.txt "$DESTDIR/usr/share/codeos/version"
 install -m 0755 /project/codeos-ui/codeos-keyboard-setup.sh "$DESTDIR/usr/local/bin/codeos-keyboard-setup"
 install -m 0644 /project/security-center/index.html "$DESTDIR/usr/share/codeos/security-center.html"
 cat > "$DESTDIR/usr/local/bin/codeos-security" <<'EOF'
@@ -42,6 +44,18 @@ Exec=codeos-store
 Icon=system-software-install
 Terminal=false
 Categories=System;PackageManager;
+EOF
+cat > "$DESTDIR/usr/share/applications/codeos-update.desktop" <<'EOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CodeOS Update
+Name[fa]=به‌روزرسانی CodeOS
+Comment=Check system updates and recovery options
+Exec=codeos-update
+Icon=system-software-update
+Terminal=false
+Categories=System;Settings;
 EOF
 cat > "$DESTDIR/usr/share/applications/codeos-security.desktop" <<'EOF'
 [Desktop Entry]

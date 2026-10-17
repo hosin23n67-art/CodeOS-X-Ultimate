@@ -12,6 +12,8 @@ required = [
     "codeos-ui/codeos-keyboard-setup.sh",
     "codeos-ui/codeos-control-center.py",
     "codeos-ui/codeos-security-center.py",
+    "codeos-ui/codeos-update.py",
+    "codeos-ui/version.txt",
     "codeos-ui/wallpaper-purple.svg",
     "codeos-ui/wallpaper-teal.svg",
     "codeos-ui/codeos-settings.py",
@@ -27,7 +29,7 @@ for name in required:
     if not path.is_file() or path.stat().st_size == 0:
         errors.append(f"missing or empty required file: {name}")
 
-for name in ("codeos-ui/codeos-control-center.py", "codeos-ui/codeos-settings.py", "codeos-ui/codeos-store.py", "codeos-ui/codeos-security-center.py"):
+for name in ("codeos-ui/codeos-control-center.py", "codeos-ui/codeos-settings.py", "codeos-ui/codeos-store.py", "codeos-ui/codeos-security-center.py", "codeos-ui/codeos-update.py"):
     path = ROOT / name
     if path.exists():
         try:
@@ -57,7 +59,7 @@ for name in ("codeos-ui/xfce4-panel.xml", "codeos-ui/xfce4-desktop.xml", "codeos
 installer = ROOT / "codeos-ui/install-codeos-ui.sh"
 if installer.exists():
     text = installer.read_text(encoding="utf-8")
-    if "codeos-security" not in text or "chmod 0755" not in text:
+    if "codeos-security" not in text or "codeos-update" not in text or "version.txt" not in text or "chmod 0755" not in text:
         errors.append("security-center launcher is not installed as an executable command")
 
 if errors:

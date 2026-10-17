@@ -8,6 +8,11 @@ on:
       - "security-center/**"
       - "codeos-ui/**"
       - "README.md"
+      - "scripts/**"
+      - "config/**"
+      - "Makefile"
+      - "*.yml"
+      - "*.yaml"
 
 concurrency:
   group: codeos-iso-${{ github.ref }}

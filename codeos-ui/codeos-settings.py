@@ -41,7 +41,19 @@ def main():
             messagebox.showwarning("CodeOS","ویژگی تصویر زمینه در XFCE پیدا نشد. روی دسکتاپ راست‌کلیک کن و Desktop Settings را باز کن."); return
         for prop in targets: xfconf("xfce4-desktop",prop,path)
         messagebox.showinfo("CodeOS","درخواست تغییر تصویر زمینه ارسال شد.")
-    ttk.Button(frame,text="انتخاب تصویر…",command=wallpaper).pack(anchor="w",pady=(6,18))
+    ttk.Button(frame,text="انتخاب تصویر دلخواه…",command=wallpaper).pack(anchor="w",pady=(6,8))
+    def builtin_wallpaper(filename):
+        path="/usr/share/codeos/"+filename
+        r=run(["xfconf-query","-c","xfce4-desktop","-l"])
+        targets=[p for p in (r.stdout.splitlines() if r else []) if p.endswith("/last-image")]
+        if not targets:
+            messagebox.showwarning("CodeOS","ویژگی تصویر زمینه در XFCE پیدا نشد. تنظیمات دسکتاپ را بررسی کن."); return
+        for prop in targets: xfconf("xfce4-desktop",prop,path)
+        messagebox.showinfo("CodeOS","تصویر زمینه CodeOS انتخاب شد.")
+    presetrow=ttk.Frame(frame); presetrow.pack(fill="x",pady=(0,14))
+    ttk.Button(presetrow,text="آبی CodeOS",command=lambda:builtin_wallpaper("codeos-wallpaper.svg")).pack(side="left",padx=(0,6))
+    ttk.Button(presetrow,text="بنفش",command=lambda:builtin_wallpaper("wallpaper-purple.svg")).pack(side="left",padx=6)
+    ttk.Button(presetrow,text="اقیانوسی",command=lambda:builtin_wallpaper("wallpaper-teal.svg")).pack(side="left",padx=6)
     ttk.Label(frame,text="تغییرات واقعی فقط در نشست XFCE فعلی اعمال می‌شوند.",wraplength=540).pack(anchor="w",pady=(8,0))
     root.mainloop()
 if __name__=="__main__": main()

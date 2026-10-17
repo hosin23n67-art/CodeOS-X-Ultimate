@@ -12,6 +12,7 @@ install -m 0755 /project/codeos-ui/codeos-store.py "$DESTDIR/usr/local/bin/codeo
 install -m 0755 /project/codeos-ui/codeos-control-center.py "$DESTDIR/usr/local/bin/codeos-control-center"
 install -m 0755 /project/codeos-ui/codeos-security-center.py "$DESTDIR/usr/local/bin/codeos-security-center"
 install -m 0755 /project/codeos-ui/codeos-update.py "$DESTDIR/usr/local/bin/codeos-update"
+install -m 0755 /project/codeos-ui/codeos-repair.py "$DESTDIR/usr/local/bin/codeos-repair"
 install -m 0644 /project/codeos-ui/version.txt "$DESTDIR/usr/share/codeos/version"
 install -m 0755 /project/codeos-ui/codeos-keyboard-setup.sh "$DESTDIR/usr/local/bin/codeos-keyboard-setup"
 install -m 0644 /project/security-center/index.html "$DESTDIR/usr/share/codeos/security-center.html"

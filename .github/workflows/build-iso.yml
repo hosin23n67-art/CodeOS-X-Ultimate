@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -219,11 +219,23 @@ jobs:
           file output/CodeOS-X-Ultimate-amd64.iso
           sha256sum output/CodeOS-X-Ultimate-amd64.iso
 
-      - name: Upload ISO artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CodeOS-X-Ultimate-amd64-ISO
-          path: output/CodeOS-X-Ultimate-amd64.iso
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 7
+      - name: Publish ISO as split GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          iso="output/CodeOS-X-Ultimate-amd64.iso"
+          test -s "$iso"
+
+          # GitHub Release assets have a per-file size limit. Split the 5+ GB
+          # ISO into <2 GB pieces so the build does not depend on Actions artifact quota.
+          split -b 1800M -d -a 2 "$iso" "$RUNNER_TEMP/CodeOS-X-Ultimate-amd64.iso.part-"
+          sha256sum "$iso" > "$RUNNER_TEMP/CodeOS-X-Ultimate-amd64.iso.sha256"
+
+          tag="codeos-build-${GITHUB_RUN_ID}"
+          gh release create "$tag" \
+            "$RUNNER_TEMP"/CodeOS-X-Ultimate-amd64.iso.part-* \
+            "$RUNNER_TEMP/CodeOS-X-Ultimate-amd64.iso.sha256" \
+            --target "$GITHUB_SHA" \
+            --title "CodeOS X Ultimate build #${GITHUB_RUN_NUMBER}" \
+            --notes "CodeOS X Ultimate AMD64 live ISO. Download every .part file, join them in lexical order, and verify the resulting ISO with the included SHA-256 file."
